@@ -42,22 +42,27 @@ module y_idler_bracket_stl() {
     color(y_idler_bracket_color) intersection() {
         difference() {
             rotate([90, 0, 90])
-                linear_extrude(height = width, center = true)                                               //side profile
+            {
+                // side profile
+                linear_extrude(height = width, center = true)
+                {
                     hull() 
                     {
+                        // top front edge curve
                         translate([0, axle_height])
                         {
                             circle(dia / 2);
                         }
 
+                        // bottom plate
                         translate([-dia / 2 , 0])
                         {
                             square([length, base_thickness]);   // base
                         }
-
-                        square([dia / 2 + wall, height]);       // upright
                     }
-
+                }
+            }
+            
             // cavity for bearing
             translate([0, - dia / 2, height + part_base_thickness])
             {
@@ -67,34 +72,43 @@ module y_idler_bracket_stl() {
                 }
             }
 
-            // cavity for screw slot
+            // rear cavity for screw slot
             translate([0, dia / 2 + wall + tab_length / 2 + eta, height / 2 + base_thickness + eta])
             {
                 cube([back_width - 2 * wall, tab_length, height], center = true);
             }
             
-            if(base_nut_traps)
-            {
-                y_idler_screw_hole_position()
-                {
-                    translate([0, 0, base_thickness])
-                    {
-                        nut_trap(screw_clearance_radius(base_screw), nut_radius(base_nut), base_thickness - part_base_thickness);
-                    }
-                }
-            }
-            else
+//            if(base_nut_traps)
+//            {
+//                y_idler_screw_hole_position()         // this is the base screw hole, keep to place pin
+//                {
+//                    translate([0, 0, base_thickness])
+//                    {
+//                        nut_trap(screw_clearance_radius(base_screw), nut_radius(base_nut), base_thickness - part_base_thickness);
+//                    }
+//                }
+//            }
+//            else
                 translate([0,  dia / 2 + wall + slot / 2 + washer_diameter(base_washer) / 2 + clearance , 0])     // screw slot
                     rotate([0,0,90])
                         slot(r = screw_clearance_radius(base_screw), l = slot, h = 2 * base_thickness + 1, center = true);
 
-            translate([0, 0, axle_height])                                                                  // hole for axle
+            translate([0, 0, axle_height])  // hole for axle
+            {
                 rotate([90, 0, 90])
+                {
                     teardrop_plus(r = M4_clearance_radius, h = width + 1, center = true);
+                }
+            }
         }
-        union() { // plan profile
+        
+        // plan profile
+        union() 
+        { 
             translate([0, (length - tab_length) / 2 - dia / 2, -1])
+            {
                 rounded_rectangle([width - eta, length - tab_length - eta, height + 2], r = 2, center = false);
+            }
 
             translate([0, length - (tab_length + 5) / 2 - dia / 2 - eta, -1])
             {
