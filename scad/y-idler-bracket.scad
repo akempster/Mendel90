@@ -11,24 +11,25 @@
 // Improved design to allow for more consistent
 // belt tensioner allignment and reduces possibility of 
 // detensioning over time
+
 include <conf/config.scad>
 use <y-motor-bracket.scad>
 
 slot_length  = 10;
 
-slot = base_nut_traps ? 0 : slot_length;
-axle_height = y_motor_height() + pulley_inner_radius - ball_bearing_diameter(Y_idler_bearing) / 2;
-base_thickness = part_base_thickness + (base_nut_traps ? nut_trap_depth(base_nut) : 0);
-wall = default_wall;
+slot            = base_nut_traps ? 0 : slot_length;
+axle_height     = y_motor_height() + pulley_inner_radius - ball_bearing_diameter(Y_idler_bearing) / 2;
+base_thickness  = part_base_thickness + (base_nut_traps ? nut_trap_depth(base_nut) : 0);
+wall            = default_wall;
 
-clearance = 1;
-dia  = washer_diameter(M5_penny_washer) + 2 * clearance;
-tab_length = washer_diameter(base_washer) + 2 * clearance + slot;
-length = dia + wall + tab_length;
+clearance   = 1;
+dia         = washer_diameter(M5_penny_washer) + 2 * clearance;
+tab_length  = washer_diameter(base_washer) + 2 * clearance + slot;
+length      = dia + wall + tab_length;
 
-function y_idler_travel() = slot_length;
-function y_idler_clearance() = dia / 2 + slot_length / 2;
-function y_idler_offset() = dia / 2 + wall + tab_length;
+function y_idler_travel()       = slot_length;
+function y_idler_clearance()    = dia / 2 + slot_length / 2;
+function y_idler_offset()       = dia / 2 + wall + tab_length;
 
 width = (wall + washer_thickness(M5_penny_washer) + washer_thickness(M4_washer) + ball_bearing_width(Y_idler_bearing)) * 2;
 back_width = washer_diameter(base_washer) + 2 * clearance + 2 * wall;
@@ -42,28 +43,46 @@ module y_idler_bracket_stl() {
         difference() {
             rotate([90, 0, 90])
                 linear_extrude(height = width, center = true)                                               //side profile
-                    hull() {
+                    hull() 
+                    {
                         translate([0, axle_height])
+                        {
                             circle(dia / 2);
+                        }
 
                         translate([-dia / 2 , 0])
-                            square([length, base_thickness]);                                               // base
+                        {
+                            square([length, base_thickness]);   // base
+                        }
 
-                        square([dia / 2 + wall, height]);                                                   // upright
+                        square([dia / 2 + wall, height]);       // upright
                     }
 
-            translate([0, - dia / 2, height + part_base_thickness])                                        // cavity for bearing
+            // cavity for bearing
+            translate([0, - dia / 2, height + part_base_thickness])
+            {
                 rotate([0, 90, 0])
+                {
                     rounded_rectangle(size = [height * 2, dia * 2,  width - 2 * wall], r = dia / 2);
+                }
+            }
 
-            translate([0, dia / 2 + wall + tab_length / 2 + eta, height / 2 + base_thickness + eta])        // cavity for screw slot
+            // cavity for screw slot
+            translate([0, dia / 2 + wall + tab_length / 2 + eta, height / 2 + base_thickness + eta])
+            {
                 cube([back_width - 2 * wall, tab_length, height], center = true);
-
+            }
+            
             if(base_nut_traps)
+            {
                 y_idler_screw_hole_position()
+                {
                     translate([0, 0, base_thickness])
+                    {
                         nut_trap(screw_clearance_radius(base_screw), nut_radius(base_nut), base_thickness - part_base_thickness);
-
+                    }
+                }
+            }
             else
                 translate([0,  dia / 2 + wall + slot / 2 + washer_diameter(base_washer) / 2 + clearance , 0])     // screw slot
                     rotate([0,0,90])
@@ -78,7 +97,9 @@ module y_idler_bracket_stl() {
                 rounded_rectangle([width - eta, length - tab_length - eta, height + 2], r = 2, center = false);
 
             translate([0, length - (tab_length + 5) / 2 - dia / 2 - eta, -1])
+            {
                 rounded_rectangle([back_width, tab_length + 5, height + 2], r = 2, center = false);
+            }
         }
     }
 }
@@ -86,19 +107,33 @@ module y_idler_bracket_stl() {
 nut_offset = base_nut_traps ? -tab_length / 2 + nut_radius(base_nut) + 0.5 : 0;
 
 module y_idler_screw_hole_position()
+{
     translate([0, dia / 2 + wall + tab_length / 2 + nut_offset,0])
+    {
         children(0);
+    }
+}
 
 module y_idler_screw_hole()
+{
     y_idler_screw_hole_position()
         if(base_nut_traps)
+        {
             //translate([0, -slot_length / 2, 0])
                 rotate([0, 0, 90])
-                    slot(h = 100, l = slot_length, r = screw_clearance_radius(base_screw), center = true);
+                {
+                    slot(h = 100, l = slot_length, 
+                            r = screw_clearance_radius(base_screw), center = true);
+                }
+        }
         else
+        {
             base_screw_hole();
+        }
+}
 
-module y_idler_assembly() {
+module y_idler_assembly() 
+{
     assembly("y_idler_assembly");
 
     color(y_idler_bracket_color) render() y_idler_bracket_stl();
@@ -106,8 +141,10 @@ module y_idler_assembly() {
     translate([0, 0, axle_height]) rotate([0, -90, 0]) 
     {
         explode([20, -20, 0])
+        {
             for(side = [-1, 1]) 
             {
+                // ball bearing
                 translate([0, 0, 
                     (ball_bearing_width(Y_idler_bearing) / 2 + exploded) * side])
                 {
@@ -115,8 +152,13 @@ module y_idler_assembly() {
                 }
                 
                 translate([0, 0, (ball_bearing_width(Y_idler_bearing) + exploded * 4) * side])
+                {
                     rotate([0, side * 90 - 90, 0])
+                    {
                         washer(M4_washer);
+                    }
+                }
+                
                 translate([0, 0, (ball_bearing_width(Y_idler_bearing) + washer_thickness(M4_washer) + exploded * 6) * side])
                 {
                     rotate([0, side * 90 - 90, 0])
@@ -125,11 +167,15 @@ module y_idler_assembly() {
                     }
                 }
             }
+        }
+ 
+        // the axle screw
         translate([0, 0, width / 2])
         {
             screw_and_washer(M4_cap_screw, 30);
         }
-        
+
+        // nut and washer for the axle
         translate([0, 0, -width / 2])
         {
             rotate([180, 0, 0])
@@ -139,15 +185,14 @@ module y_idler_assembly() {
         }
     }
 
-    y_idler_screw_hole_position()
-        translate([0, 0, part_base_thickness])
-            base_screw(part_base_thickness);
-
     end("y_idler_assembly");
 }
 
 
 if(1)
+{
     y_idler_assembly();
-else
+} else
+{
     y_idler_bracket_stl();
+}
