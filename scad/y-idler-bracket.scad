@@ -75,20 +75,16 @@ module y_idler_bracket_stl() {
             // rear cavity for screw slot
             translate([0, dia / 2 + wall + tab_length / 2 + eta, height / 2 + base_thickness + eta])
             {
-                cube([back_width - 2 * wall, tab_length, height], center = true);
+                //cube([back_width - 2 * wall, tab_length, height], center = true);
             }
             
-//            if(base_nut_traps)
-//            {
-//                y_idler_screw_hole_position()         // this is the base screw hole, keep to place pin
-//                {
-//                    translate([0, 0, base_thickness])
-//                    {
-//                        nut_trap(screw_clearance_radius(base_screw), nut_radius(base_nut), base_thickness - part_base_thickness);
-//                    }
-//                }
-//            }
-//            else
+            if(base_nut_traps)
+            {
+                // use it as a translate(){}
+               // y_idler_screw_hole_position()         // this is the base screw hole, keep to place pin
+
+            }
+            else
                 translate([0,  dia / 2 + wall + slot / 2 + washer_diameter(base_washer) / 2 + clearance , 0])     // screw slot
                     rotate([0,0,90])
                         slot(r = screw_clearance_radius(base_screw), l = slot, h = 2 * base_thickness + 1, center = true);
@@ -103,17 +99,9 @@ module y_idler_bracket_stl() {
         }
         
         // plan profile
-        union() 
-        { 
-            translate([0, (length - tab_length) / 2 - dia / 2, -1])
-            {
-                rounded_rectangle([width - eta, length - tab_length - eta, height + 2], r = 2, center = false);
-            }
-
-            translate([0, length - (tab_length + 5) / 2 - dia / 2 - eta, -1])
-            {
-                rounded_rectangle([back_width, tab_length + 5, height + 2], r = 2, center = false);
-            }
+        translate([0, (length - tab_length) / 2 - dia / 2, -1])
+        {
+            rounded_rectangle([width - eta, length - tab_length - eta, height + 2], r = 2, center = false);
         }
     }
 }
