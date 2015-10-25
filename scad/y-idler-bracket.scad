@@ -27,6 +27,8 @@ dia         = washer_diameter(M5_penny_washer) + 2 * clearance;
 tab_length  = washer_diameter(base_washer) + 2 * clearance + slot;
 length      = dia + wall + tab_length;
 
+wing_width = 8;
+
 function y_idler_travel()       = slot_length;
 function y_idler_clearance()    = dia / 2 + slot_length / 2;
 function y_idler_offset()       = dia / 2 + wall + tab_length;
@@ -39,70 +41,67 @@ height = axle_height + dia / 2;
 module y_idler_bracket_stl() {
     stl("y_idler_bracket");
 
-    color(y_idler_bracket_color) intersection() {
-        difference() {
-            rotate([90, 0, 90])
+    color(y_idler_bracket_color) 
+    union()
+    {
+    intersection() 
+    {
+            difference() 
             {
-                // side profile
-                linear_extrude(height = width, center = true)
+                rotate([90, 0, 90])
                 {
-                    hull() 
+                    // side profile
+                    linear_extrude(height = width, center = true)
                     {
-                        // top front edge curve
-                        translate([0, axle_height])
+                        hull() 
                         {
-                            circle(dia / 2);
+                            // top front edge curve
+                            translate([0, axle_height])
+                            {
+                                circle(dia / 2);
+                            }
+    
+                            // bottom plate
+                            translate([-dia / 2 , 0])
+                            {
+                                square([length, base_thickness]);   // base
+                            }
                         }
-
-                        // bottom plate
-                        translate([-dia / 2 , 0])
-                        {
-                            square([length, base_thickness]);   // base
-                        }
+                    }
+                }
+                
+                // cavity for bearing
+                translate([0, - dia / 2, height + part_base_thickness])
+                {
+                    rotate([0, 90, 0])
+                    {
+                        rounded_rectangle(size = [height * 2, dia * 2,  width - 2 * wall], r = dia / 2);
+                    }
+                }
+    
+                // hole for axle
+                translate([0, 0, axle_height])
+                {
+                    rotate([90, 0, 90])
+                    {
+                        teardrop_plus(r = M4_clearance_radius, h = width + 1, center = true);
                     }
                 }
             }
             
-            // cavity for bearing
-            translate([0, - dia / 2, height + part_base_thickness])
-            {
-                rotate([0, 90, 0])
-                {
-                    rounded_rectangle(size = [height * 2, dia * 2,  width - 2 * wall], r = dia / 2);
-                }
-            }
-
-            // rear cavity for screw slot
-            translate([0, dia / 2 + wall + tab_length / 2 + eta, height / 2 + base_thickness + eta])
-            {
-                //cube([back_width - 2 * wall, tab_length, height], center = true);
-            }
-            
-            if(base_nut_traps)
-            {
-                // use it as a translate(){}
-               // y_idler_screw_hole_position()         // this is the base screw hole, keep to place pin
-
-            }
-            else
-                translate([0,  dia / 2 + wall + slot / 2 + washer_diameter(base_washer) / 2 + clearance , 0])     // screw slot
-                    rotate([0,0,90])
-                        slot(r = screw_clearance_radius(base_screw), l = slot, h = 2 * base_thickness + 1, center = true);
-
-            translate([0, 0, axle_height])  // hole for axle
-            {
-                rotate([90, 0, 90])
-                {
-                    teardrop_plus(r = M4_clearance_radius, h = width + 1, center = true);
-                }
-            }
-        }
         
         // plan profile
         translate([0, (length - tab_length) / 2 - dia / 2, -1])
         {
             rounded_rectangle([width - eta, length - tab_length - eta, height + 2], r = 2, center = false);
         }
+    }
+    
+    // side wings
+    translate([-(width+wing_width), dia/2, 0])
+    {
+        cube([2*(width+wing_width), wall, axle_height]);
+    }
     }
 }
 
