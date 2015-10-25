@@ -21,13 +21,14 @@ slot            = base_nut_traps ? 0 : slot_length;
 axle_height     = y_motor_height() + pulley_inner_radius - ball_bearing_diameter(Y_idler_bearing) / 2;
 base_thickness  = part_base_thickness + (base_nut_traps ? nut_trap_depth(base_nut) : 0);
 wall            = default_wall;
+backplate_offset = 40;
 
 clearance   = 1;
 dia         = washer_diameter(M5_penny_washer) + 2 * clearance;
 tab_length  = washer_diameter(base_washer) + 2 * clearance + slot;
 length      = dia + wall + tab_length;
 
-wing_width = 8;
+wing_width = 20;
 
 function y_idler_travel()       = slot_length;
 function y_idler_clearance()    = dia / 2 + slot_length / 2;
@@ -38,6 +39,74 @@ back_width = washer_diameter(base_washer) + 2 * clearance + 2 * wall;
 
 height = axle_height + dia / 2;
 
+module y_idler_backplate_stl()
+{   
+    color(y_idler_bracket_color) 
+    translate([0, backplate_offset, 0])
+    {      
+        union()
+        {
+            // central join
+            translate([-dia/2, 0, 0])
+            {
+                cube([dia, wall+5, axle_height]);
+            }
+            
+            // bottom section
+            translate([-(dia + 2*wing_width)/2, -20, -3-6])
+            {
+                cube([dia + 2*wing_width, wall+5+20, 6]);
+            }
+            
+            // bottom to top join
+            translate([-(dia + 2*wing_width)/2, 0, -3])
+            {
+                cube([dia+2*wing_width, wall+5, 3]);
+            }
+            
+            // securing tab
+            translate([-(dia + 2*wing_width)/2, -5, 0])
+            {
+                cube([dia+2*wing_width, wall+5+5, 5]);
+            }
+            
+            // left side wing
+            translate([-wing_width-width/2+wall, 0, 0])
+            {
+                difference()
+                {
+                    cube([wing_width, wall+5, axle_height]);
+                    
+                    translate([wing_width/2, 20, axle_height/2])
+                    {
+                        rotate([90, 30, 0])
+                        {
+                            nut_trap(screw_clearance_radius(M4_cap_screw), nut_radius(screw_nut(M4_cap_screw)), 5);
+                        }
+                    }
+                }
+            }
+        
+            // right side wing
+            translate([(width/2)-wall/2, 0, 0])
+            {
+                difference()
+                {
+                    cube([wing_width, wall+5, axle_height]);
+                    
+                    translate([wing_width/2, 20, axle_height/2])
+                    {
+                        rotate([90, 30, 0])
+                        {
+                            nut_trap(screw_clearance_radius(M4_cap_screw), nut_radius(screw_nut(M4_cap_screw)), 5);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 module y_idler_bracket_stl() {
     stl("y_idler_bracket");
 
@@ -46,50 +115,49 @@ module y_idler_bracket_stl() {
     {
     intersection() 
     {
-            difference() 
+        difference() 
+        {
+            rotate([90, 0, 90])
             {
-                rotate([90, 0, 90])
+                // side profile
+                linear_extrude(height = width, center = true)
                 {
-                    // side profile
-                    linear_extrude(height = width, center = true)
+                    hull() 
                     {
-                        hull() 
+                        // top front edge curve
+                        translate([0, axle_height])
                         {
-                            // top front edge curve
-                            translate([0, axle_height])
-                            {
-                                circle(dia / 2);
-                            }
-    
-                            // bottom plate
-                            translate([-dia / 2 , 0])
-                            {
-                                square([length, base_thickness]);   // base
-                            }
+                            circle(dia / 2);
                         }
-                    }
-                }
-                
-                // cavity for bearing
-                translate([0, - dia / 2, height + part_base_thickness])
-                {
-                    rotate([0, 90, 0])
-                    {
-                        rounded_rectangle(size = [height * 2, dia * 2,  width - 2 * wall], r = dia / 2);
-                    }
-                }
-    
-                // hole for axle
-                translate([0, 0, axle_height])
-                {
-                    rotate([90, 0, 90])
-                    {
-                        teardrop_plus(r = M4_clearance_radius, h = width + 1, center = true);
+
+                        // bottom plate
+                        translate([-dia / 2 , 0])
+                        {
+                            square([length, base_thickness]);   // base
+                        }
                     }
                 }
             }
             
-        
+            // cavity for bearing
+            translate([0, - dia / 2, height + part_base_thickness])
+            {
+                rotate([0, 90, 0])
+                {
+                    rounded_rectangle(size = [height * 2, dia * 2,  width - 2 * wall], r = dia / 2);
+                }
+            }
+
+            // hole for axle
+            translate([0, 0, axle_height])
+            {
+                rotate([90, 0, 90])
+                {
+                    teardrop_plus(r = M4_clearance_radius, h = width + 1, center = true);
+                }
+            }
+        }
+            
         // plan profile
         translate([0, (length - tab_length) / 2 - dia / 2, -1])
         {
@@ -97,10 +165,38 @@ module y_idler_bracket_stl() {
         }
     }
     
-    // side wings
-    translate([-(width+wing_width), dia/2, 0])
+    // left side wing
+    translate([-wing_width-width/2+wall, (dia/2)-5, 0])
     {
-        cube([2*(width+wing_width), wall, axle_height]);
+        difference()
+        {
+            cube([wing_width, wall+5, axle_height]);
+            
+            translate([wing_width/2, 0, axle_height/2])
+            {
+                rotate([90, 30, 0])
+                {
+                    nut_trap(screw_clearance_radius(M4_cap_screw), nut_radius(screw_nut(M4_cap_screw)), 5);
+                }
+            }
+        }
+    }
+    
+    // right side wing
+    translate([(width/2)-wall/2, (dia/2)-5, 0])
+    {
+        difference()
+        {
+            cube([wing_width, wall+5, axle_height]);
+            
+            translate([wing_width/2, 0, axle_height/2])
+            {
+                rotate([90, 30, 0])
+                {
+                    nut_trap(screw_clearance_radius(M4_cap_screw), nut_radius(screw_nut(M4_cap_screw)), 5);
+                }
+            }
+        }
     }
     }
 }
@@ -139,6 +235,8 @@ module y_idler_assembly()
 
     color(y_idler_bracket_color) render() y_idler_bracket_stl();
 
+    y_idler_backplate_stl();
+    
     translate([0, 0, axle_height]) rotate([0, -90, 0]) 
     {
         explode([20, -20, 0])
@@ -187,6 +285,33 @@ module y_idler_assembly()
     }
 
     end("y_idler_assembly");
+    
+    // backplate bracket vitamins
+    translate([2.75-wing_width, backplate_offset + wall + 5, axle_height/2])
+    {
+        rotate([270, 30, 0])
+        {
+            screw_and_washer(M4_cap_screw, 60);
+            
+            translate([0, 0, -(backplate_offset+2.5)])
+            {
+                nut(M4_nut);
+            }
+        }
+    }
+    
+    translate([wing_width-1.75, backplate_offset + wall + 5, axle_height/2])
+    {
+        rotate([270, 30, 0])
+        {
+            screw_and_washer(M4_cap_screw, 60);
+            
+            translate([0, 0, -(backplate_offset+2.5)])
+            {
+                nut(M4_nut);
+            }
+        }
+    }
 }
 
 
@@ -196,4 +321,5 @@ if(1)
 } else
 {
     y_idler_bracket_stl();
+    y_idler_backplate_stl();
 }
